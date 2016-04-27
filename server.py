@@ -88,6 +88,7 @@ Usage:
         print args.d
         if args.d:
             db_path = args.d
+            action = "new"
             if os.path.isfile(db_path):
                 if args.replace and args.append:
                     parser.error("Conflicting arguments.  You must specify --append OR --replace!")
@@ -98,10 +99,8 @@ Usage:
                     action = "replace"
                 elif args.append:
                     action = "append"
-                else:
-                    action = "new"
 
-                prepare_db(db_path, action)
+            prepare_db(db_path, action)
 
         if args.o:
             out_file = args.o
