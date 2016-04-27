@@ -42,7 +42,7 @@ The client also requires DynamoRIO.  Tested with version 6.1
 ----------
 Server-side:
 
-* ```server.py --seeds ./seeds --db backup.db --trace --minimize```
+* ```server.py -s ./seeds -d backup.db -trace -minimize -o output.csv```
 
 Client-side:
 
