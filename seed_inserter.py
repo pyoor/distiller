@@ -47,5 +47,6 @@ class SeedInserter:
                     else:
                         print "[ +D+ ] - Trace for seed exists in database: %s" % seed_name
         finally:
-            if self.bs:
-                self.bs.close()
+            self.bs.close()
+            self.sql.close()
+            print "[ +D+ ] - Finished seed inserter."
