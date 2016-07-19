@@ -7,6 +7,7 @@ from trace_inserter import TraceInserter
 
 DYNAMO_PATH = "C:\\DynamoRIO\\bin32\\drrun.exe"
 TARGET_PATH = 'C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe'
+TARGET_ARGS = ''
 MAX_ATTEMPTS = 3
 WAIT_TIME = 5
 
@@ -33,7 +34,7 @@ def main():
         sys.exit()
 
     # Start tracing
-    tracer = TraceInserter(host, port, DYNAMO_PATH, TARGET_PATH, WAIT_TIME)
+    tracer = TraceInserter(host, port, DYNAMO_PATH, TARGET_PATH, TARGET_ARGS, WAIT_TIME)
     while tracer.ready():
         tracer.go()
     else:

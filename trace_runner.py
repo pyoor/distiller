@@ -10,9 +10,10 @@ import psutil
 
 
 class TraceRunner:
-    def __init__(self, dynamo_path, target_path, seed_name, seed_path, wait_time):
+    def __init__(self, dynamo_path, target_path, target_args, seed_name, seed_path, wait_time):
         self.d_path = dynamo_path
         self.t_path = target_path
+        self.t_args = target_args
         self.s_name = seed_name
         self.s_path = seed_path
         self.wait = wait_time
@@ -35,7 +36,7 @@ class TraceRunner:
         Instrument target process with seed
         """
         print "[ +D+ ] - Tracing seed: %s" % os.path.basename(self.s_name)
-        command = [self.d_path, '-t', 'drcov', '-dump_text', '-logdir', self.l_path, '--', self.t_path, self.s_path]
+        command = [self.d_path, '-t', 'drcov', '-dump_text', '-logdir', self.l_path, '--', self.t_path, self.t_args, self.s_path]
         self.proc = subprocess.Popen(command, stdout=self.null, stderr=subprocess.STDOUT)
 
         sleep(self.wait)
