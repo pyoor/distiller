@@ -8,12 +8,13 @@ from trace_runner import TraceRunner
 
 
 class TraceInserter:
-    def __init__(self, host, port, drio_path, target_path, target_args, wait_time):
+    def __init__(self, host, port, drio_path, target_path, target_args, wait_time, max_timeout):
         self.bs = beanstalkc.Connection(host, port)
         self.d_path = drio_path
         self.t_path = target_path
         self.t_args = target_args
         self.w_time = wait_time
+        self.max_timeout = max_timeout
 
         self.job = None
         self.s_name = None
@@ -58,7 +59,7 @@ class TraceInserter:
     def insert(self):
         for i in range(0, 3):
             try:
-                runner = TraceRunner(self.d_path, self.t_path, self.t_args, self.s_name, self.s_path, self.w_time)
+                runner = TraceRunner(self.d_path, self.t_path, self.t_args, self.s_name, self.s_path, self.w_time, self.max_timeout)
 
                 # Run trace
                 runner.go()

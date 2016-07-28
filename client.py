@@ -10,6 +10,7 @@ TARGET_PATH = 'C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe'
 TARGET_ARGS = ''
 MAX_ATTEMPTS = 3
 WAIT_TIME = 5
+MAX_TIMEOUT = 60
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
         sys.exit()
 
     # Start tracing
-    tracer = TraceInserter(host, port, DYNAMO_PATH, TARGET_PATH, TARGET_ARGS, WAIT_TIME)
+    tracer = TraceInserter(host, port, DYNAMO_PATH, TARGET_PATH, TARGET_ARGS, WAIT_TIME, MAX_TIMEOUT)
     while tracer.ready():
         tracer.go()
     else:
