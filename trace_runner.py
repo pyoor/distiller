@@ -60,11 +60,12 @@ class TraceRunner:
                             if cpu is not None and cpu is True:
                                 self.kill(child.pid)
                                 break
-                            end_time = time()
-                            elapsed = end_time - self.start_time
-                            if elapsed > self.max_timeout:
-                                self.kill(child.pid)
-                                break
+                            if self.max_timeout is not None or self.max_timeout != 0:
+                                end_time = time()
+                                elapsed = end_time - self.start_time
+                                if elapsed > self.max_timeout:
+                                    self.kill(child.pid)
+                                    break
         except psutil.NoSuchProcess:
             pass
 
