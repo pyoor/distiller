@@ -83,16 +83,6 @@ class TraceInserter:
             except Exception, e:
                 print "[ +D+ ] - Something went wrong. Restarting."
 
-            else:
-                while True:
-                    try:
-                        if os.path.isfile(self.s_path):
-                            os.remove(self.s_path)
-                    except WindowsError:
-                        print "[ +E+ ] - Error deleting file."
-                        sleep(1)
-                    else:
-                        break
         else:
             print "[ +E+ ] - Reached max tries.  Burying."
             self.job.bury()
