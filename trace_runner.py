@@ -1,26 +1,28 @@
-import glob
 import os
+import glob
 import shlex
-import shutil
-import subprocess
-import tempfile
-from time import sleep
-
 import psutil
+import shutil
+import tempfile
+import subprocess
+from time import sleep, time
 
 
 class TraceRunner:
-    def __init__(self, dynamo_path, target_path, target_args, seed_name, seed_path, wait_time):
+    def __init__(self, dynamo_path, target_path, target_args, seed_name, seed_path, wait_time, max_timeout):
         self.d_path = dynamo_path
         self.t_path = target_path
         self.t_args = target_args
         self.s_name = seed_name
         self.s_path = seed_path
         self.wait = wait_time
+        self.max_timeout = max_timeout
 
         self.t_name = os.path.basename(target_path)
         self.l_path = tempfile.mkdtemp()
         self.null = open(os.devnull, 'w')
+
+        self.start_time = None
 
         self.proc = None
         self.ppid = None
@@ -39,6 +41,8 @@ class TraceRunner:
         command = [self.d_path, '-t', 'drcov', '-dump_text', '-logdir', self.l_path, '--', self.t_path, self.t_args, self.s_path]
         self.proc = subprocess.Popen(command, stdout=self.null, stderr=subprocess.STDOUT)
 
+        self.start_time = time()
+
         sleep(self.wait)
         self.check()
 
@@ -56,6 +60,12 @@ class TraceRunner:
                             if cpu is not None and cpu is True:
                                 self.kill(child.pid)
                                 break
+                            if self.max_timeout is not None or self.max_timeout != 0:
+                                end_time = time()
+                                elapsed = end_time - self.start_time
+                                if elapsed > self.max_timeout:
+                                    self.kill(child.pid)
+                                    break
         except psutil.NoSuchProcess:
             pass
 
@@ -66,7 +76,7 @@ class TraceRunner:
         for i in range(0, 20):
             if self.proc.poll() is None:
                 try:
-                    command = "taskkill /PID %s " % pid
+                    command = "taskkill /PID %s /T" % pid
                     subprocess.call(shlex.split(command), stdout=self.null, stderr=subprocess.STDOUT)
                 except:
                     print "[ +E+ ] - Error killing process."
@@ -77,7 +87,7 @@ class TraceRunner:
         # If process is still running, kill it forcefully
         sleep(2)
         if self.proc.poll() is None:
-            command = "taskkill /F /PID %s " % pid
+            command = "taskkill /F /PID %s /T" % pid
             subprocess.call(shlex.split(command), stdout=self.null, stderr=subprocess.STDOUT)
 
     def clean(self):
