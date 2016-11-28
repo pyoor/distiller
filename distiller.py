@@ -5,6 +5,7 @@ import sqlite3
 import sys
 import threading
 from time import sleep
+from datetime import datetime
 
 from utils.config_import import read_config
 from server.reducer import TraceReducer
@@ -37,20 +38,16 @@ def check_beanstalk():
 
 
 def verify_config(config_file):
-    config = read_config(config_file, 'server')
+    config = read_config(config_file, "server")
 
     try:
         if not config['operation']:
             print "You must specify at least a single operation type! Exiting."
             sys.exit()
 
-        # Check paths
         if not os.path.isdir(config['seed_path']):
             print "Could not locate seed_path! Exiting."
             sys.exit()
-
-        if not os.path.isdir(config['output_path']):
-            os.makedirs(config['output_path'])
 
         if os.path.isfile(config['db_path']):
             action = None
@@ -60,6 +57,10 @@ def verify_config(config_file):
             action = "N"
 
         prepare_db(config['db_path'], action)
+
+        # Create time-specific dir in output_path
+        config['output_path'] = os.path.join(config['output_path'], datetime.now().strftime("%Y%m%d-%H%M%S"))
+        os.makedirs(config['output_path'])
 
     except KeyError:
         raise Exception("Configuration file appears to have been corrupted!")
@@ -71,7 +72,7 @@ def main(config_file):
     try:
         config = verify_config(config_file)
 
-        if 'trace' in config['operation']:
+        if "trace" in config['operation']:
             # Insert seeds into beanstalk
             inserter = SeedInserter(config)
             t1 = threading.Thread(target=inserter.go)
@@ -86,9 +87,14 @@ def main(config_file):
             t1.join()
             t2.join()
 
-        if 'reduce' in config['operation']:
+        if "reduce" in config['operation']:
             reducer = TraceReducer(config)
             reducer.go()
+
+        if "minimize" in config['operation']:
+            minimizer = SeedMinimizer(config)
+            minimizer.go()
+
     finally:
         pass
 

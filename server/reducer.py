@@ -12,7 +12,7 @@ class TraceReducer:
         self.sql = sqlite3.connect(config['db_path'])
         self.c = self.sql.cursor()
 
-        filename = "%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = "reduction-results.csv"
         self.out = os.path.join(config['output_path'], filename)
 
         self.master_bblock = {}

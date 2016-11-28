@@ -8,7 +8,7 @@ def read_config(config_file, section):
     try:
         data = cfg[section]
     except KeyError:
-        print "Error:  Unable to find section %" % section
+        print "Error:  Unable to find section %s" % section
         raise
 
     return data
