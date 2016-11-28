@@ -1,0 +1,28 @@
+server:
+    seed_path: ./seeds/
+    db_path: ./backup.db
+    output_path: ./results/
+    operation:
+        - trace
+        - minimize
+       # - shrink
+    filter:
+        mode: exclude
+        modules:
+            - <unknown>
+            - C:\DynamoRIO\lib32\release\dynamorio.dll
+            - C:\DynamoRIO\tools\lib32\release\drcov.dll
+        # mode: include
+        # modules:
+        #     - C:\Program Files\Windows NT\Accessories\wordpad.exe
+
+client:
+    host: 192.168.56.1
+    drio_path: C:\DynamoRIO\bin32\drrun.exe
+    target_path: C:\Program Files\Windows NT\Accessories\wordpad.exe
+    target_args:
+    pre_cmd:
+    post_cmd:
+    max_attempts: 3
+    wait_time: 5
+    max_timeout: 45
