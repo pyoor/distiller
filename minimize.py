@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from datetime import datetime
+import os
 import sqlite3
 import msgpack
 import zlib
@@ -7,10 +8,12 @@ import csv
 
 
 class TraceMinimizer:
-    def __init__(self, db_path, out_file):
-        self.sql = sqlite3.connect(db_path)
+    def __init__(self, config):
+        self.sql = sqlite3.connect(config['db_path'])
         self.c = self.sql.cursor()
-        self.out = out_file
+
+        filename = "%s.csv" % datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.out = os.path.join(config['output_path'], filename)
 
         self.master_bblock = {}
         self.master_bbcount = {}

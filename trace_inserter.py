@@ -8,8 +8,8 @@ from trace_runner import TraceRunner
 
 
 class TraceInserter:
-    def __init__(self, host, port, drio_path, target_path, target_args, wait_time, max_timeout):
-        self.bs = beanstalkc.Connection(host, port)
+    def __init__(self, host, drio_path, target_path, target_args, wait_time, max_timeout):
+        self.bs = beanstalkc.Connection(host)
         self.d_path = drio_path
         self.t_path = target_path
         self.t_args = target_args

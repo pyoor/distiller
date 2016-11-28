@@ -6,13 +6,13 @@ import re
 
 
 class TraceProcessor:
-    def __init__(self, db_path, wl, bl):
+    def __init__(self, config):
         self.bs = beanstalkc.Connection(host='127.0.0.1', port=11300)
-        self.sql = sqlite3.connect(db_path, check_same_thread=False)
+        self.sql = sqlite3.connect(config['db_path'], check_same_thread=False)
         self.c = self.sql.cursor()
 
-        self.wl = wl
-        self.bl = bl
+        #self.wl = config['whitelist']
+        #self.bl = config['blacklist']
 
         self.job = None
 
@@ -32,7 +32,7 @@ class TraceProcessor:
 
     def go(self):
         try:
-            print "[ +D+ ] - Start preprocessor."
+            print "[ +D+ ] - Start preprocessor"
             while True:
                 # Hackish
                 # May fail with multiple threads

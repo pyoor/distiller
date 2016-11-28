@@ -6,11 +6,11 @@ from time import sleep
 
 
 class SeedInserter:
-    def __init__(self, db_path, seed_dir):
+    def __init__(self, config):
+        self.seed_dir = config['seed_path']
         self.bs = beanstalkc.Connection(host='localhost', port=11300)
-        self.sql = sqlite3.connect(db_path, check_same_thread=False)
+        self.sql = sqlite3.connect(config['db_path'], check_same_thread=False)
         self.c = self.sql.cursor()
-        self.seed_dir = seed_dir
 
     def seed_exists(self, seed_name):
         result = self.c.execute("SELECT * FROM key_lookup WHERE seed_name = ?", [seed_name])
@@ -21,7 +21,7 @@ class SeedInserter:
 
     def go(self):
         try:
-            print "[ +D+ ] - Start seed inserter."
+            print "[ +D+ ] - Start seed inserter"
             self.bs.use('seeds')
             for root, dirs, files in os.walk(self.seed_dir):
                 for seed_name in files:
@@ -49,4 +49,4 @@ class SeedInserter:
         finally:
             self.bs.close()
             self.sql.close()
-            print "[ +D+ ] - Finished seed inserter."
+            print "[ +D+ ] - Finished seed inserter"

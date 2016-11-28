@@ -1,0 +1,23 @@
+server:
+    seed_path: ./seeds/
+    db_path: ./backup.db
+    output_path: ./results/
+    modes:
+        - trace
+        - minimize
+#        - shrink
+    blacklist:
+        - <unknown>
+        - dynamorio.dll
+        - drcov.dll
+
+client:
+    host: 192.168.56.1
+    drio_path: C:\\DynamoRIO\\bin32\\drrun.exe
+    target_path: C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe
+    target_args:
+    pre_cmd:
+    post_cmd:
+    max_attempts: 3
+    wait_time: 5
+    max_timeout: 45

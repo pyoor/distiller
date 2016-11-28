@@ -12,7 +12,7 @@ class TraceRunner:
     def __init__(self, dynamo_path, target_path, target_args, seed_name, seed_path, wait_time, max_timeout):
         self.d_path = dynamo_path
         self.t_path = target_path
-        self.t_args = target_args
+        self.t_args = target_args if target_args is not None else ''
         self.s_name = seed_name
         self.s_path = seed_path
         self.wait = wait_time

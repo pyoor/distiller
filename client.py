@@ -1,44 +1,44 @@
 #!/usr/bin/python
-import argparse
 import os
 import sys
 
+from config_import import read_config
 from trace_inserter import TraceInserter
 
-DYNAMO_PATH = "C:\\DynamoRIO\\bin32\\drrun.exe"
-TARGET_PATH = 'C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe'
-TARGET_ARGS = ''
-MAX_ATTEMPTS = 3
-WAIT_TIME = 5
-MAX_TIMEOUT = 60
 
+def main(config_file):
+    cfg = read_config(config_file, 'client')
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="client.py",
-        usage="client.py --host 192.168.1.100 --port 11300",
-    )
-    parser.add_argument("-host", help="Beanstalkd address", required=True)
-    parser.add_argument("-port", help="Beanstalkd port", default='11300', type=int)
-
-    args = parser.parse_args()
-    host = args.host
-    port = args.port
+    host = cfg['host']
+    d_path = cfg['drio_path']
+    t_path = cfg['target_path']
+    t_args = cfg['target_args']
+    w_time = cfg['wait_time']
+    m_time = cfg['max_timeout']
 
     # Verify file locations
-    if not os.path.isfile(DYNAMO_PATH):
+    if not os.path.isfile(d_path):
         print "[ +E+ ] - Cannot find DynamoRIO.  Exiting!"
         sys.exit()
 
-    if not os.path.isfile(TARGET_PATH):
+    if not os.path.isfile(t_path):
         print "[ +E+ ] - Cannot find target binary.  Exiting!"
         sys.exit()
 
     # Start tracing
-    tracer = TraceInserter(host, port, DYNAMO_PATH, TARGET_PATH, TARGET_ARGS, WAIT_TIME, MAX_TIMEOUT)
+    tracer = TraceInserter(host, d_path, t_path, t_args, w_time, m_time)
     while tracer.ready():
         tracer.go()
     else:
         print "[ +D+ ] No more seeds available.  Exiting!"
 
-main()
+
+def usage():
+    print "Usage:", sys.argv[0], "<config.yml>"
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        usage()
+    else:
+        main(sys.argv[1])
