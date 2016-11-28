@@ -19,12 +19,12 @@ def prepare_db(db_path, action):
     sql = sqlite3.connect(db_path)
     c = sql.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS modules (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-    c.execute('''CREATE TABLE IF NOT EXISTS key_lookup (seed_name TEXT PRIMARY KEY, block_count INT, traces BLOB)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS key_lookup (seed_name TEXT PRIMARY KEY, ublock_cnt INT, traces BLOB)''')
 
     # Results are calculated using the full data set
     # Wipe if they exist
     c.execute('''DROP TABLE IF EXISTS results''')
-    c.execute('''CREATE TABLE results (seed_name TEXT PRIMARY KEY, block_count INT)''')
+    c.execute('''CREATE TABLE results (seed_name TEXT PRIMARY KEY, ublock_cnt INT)''')
     sql.commit()
 
 

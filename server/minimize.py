@@ -22,22 +22,22 @@ class TraceMinimizer:
         self.module_table = None
 
     def minimize(self):
-        self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY block_count DESC''')
+        self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY ublock_cnt DESC''')
         seeds = self.c.fetchall()
 
         for seed in seeds:
             seed_name = seed[0]
 
-            self.c.execute('''SELECT block_count, traces FROM key_lookup WHERE seed_name = ?''', [seed_name])
+            self.c.execute('''SELECT ublock_cnt, traces FROM key_lookup WHERE seed_name = ?''', [seed_name])
             data = self.c.fetchone()
 
-            block_count = data[0]
+            ublock_cnt = data[0]
             trace_data = msgpack.unpackb(zlib.decompress(data[1]))
 
-            # Save seed->block_count lookup
-            self.master_bbcount[seed_name] = block_count
+            # Save seed->ublock_cnt lookup
+            self.master_bbcount[seed_name] = ublock_cnt
 
-            print "[ +D+ ] - Merging %s with %s blocks into the master list." % (seed_name, block_count)
+            print "[ +D+ ] - Merging %s with %s blocks into the master list." % (seed_name, ublock_cnt)
 
             for bblock, ins_count in trace_data.iteritems():
                 if bblock not in self.master_bblock:
@@ -60,13 +60,13 @@ class TraceMinimizer:
         seed_results = self.c.fetchall()
         print "[ +D+ ] - Reduced set to %s covering %s unique blocks." % (len(block_results), len(self.master_bblock))
 
-        self.c.execute('''SELECT * FROM results ORDER BY block_count DESC LIMIT 1;''')
+        self.c.execute('''SELECT * FROM results ORDER BY ublock_cnt DESC LIMIT 1;''')
         best_seed = self.c.fetchone()
         print "[ +D+ ] - Best seed %s covers %s unique blocks." % (best_seed[0], best_seed[1])
 
         with open(self.out, 'wb') as f:
             writer = csv.writer(f)
-            writer.writerow(['Seed Name', 'Block Count'])
+            writer.writerow(['Seed Name', 'Unique Block Count'])
             writer.writerows(seed_results)
         print "[ +D+ ] - Wrote results to %s" % self.out
 
