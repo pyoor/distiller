@@ -12,7 +12,7 @@ Distiller works in two modes:
 #### Tracing:
 Seeds are pushed into the beanstalk tube and distributed to clients for tracing.  The initial trace results are uniq'd and stored for later analysis.
 
-#### Minimization:
+#### Reduction:
 After all seeds have been traced, a master list of unique blocks is generated.
 * Seeds are sorted by largest block count.
 * If a seed introduces a new block, it is added to the master list.
@@ -59,7 +59,7 @@ Client-side:
 [ +D+ ] - Processed trace for seed 3.rtf covering 160985 unique blocks
 [ +D+ ] - Processed trace for seed 1.rtf covering 148383 unique blocks
 [ +D+ ] - All traces have been processed
-[ +D+ ] - Start minimizer.
+[ +D+ ] - Start reducer.
 [ +D+ ] - Merging 3.rtf with 160985 blocks into the master list.
 [ +D+ ] - Merging 2.rtf with 153849 blocks into the master list.
 [ +D+ ] - Merging 1.rtf with 148383 blocks into the master list.

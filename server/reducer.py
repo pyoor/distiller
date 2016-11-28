@@ -7,7 +7,7 @@ import zlib
 import csv
 
 
-class TraceMinimizer:
+class TraceReducer:
     def __init__(self, config):
         self.sql = sqlite3.connect(config['db_path'])
         self.c = self.sql.cursor()
@@ -21,7 +21,7 @@ class TraceMinimizer:
 
         self.module_table = None
 
-    def minimize(self):
+    def reduce(self):
         self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY ublock_cnt DESC''')
         seeds = self.c.fetchall()
 
@@ -71,11 +71,11 @@ class TraceMinimizer:
         print "[ +D+ ] - Wrote results to %s" % self.out
 
     def go(self):
-        print "[ +D+ ] - Start minimizer."
+        print "[ +D+ ] - Start reducer."
         n1 = datetime.now()
 
-        # Minimize traces
-        self.minimize()
+        # Reduce traces
+        self.reduce()
 
         # Update db and output to CSV
         self.report()

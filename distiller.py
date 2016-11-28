@@ -7,7 +7,7 @@ import threading
 from time import sleep
 
 from utils.config_import import read_config
-from server.minimize import TraceMinimizer
+from server.reducer import TraceReducer
 from server.preprocess import TraceProcessor
 from server.seed_inserter import SeedInserter
 
@@ -86,9 +86,9 @@ def main(config_file):
             t1.join()
             t2.join()
 
-        if 'minimize' in config['operation']:
-            minimizer = TraceMinimizer(config)
-            minimizer.go()
+        if 'reduce' in config['operation']:
+            reducer = TraceReducer(config)
+            reducer.go()
     finally:
         pass
 
