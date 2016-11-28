@@ -21,13 +21,13 @@ class SeedInserter:
 
     def go(self):
         try:
-            print "[ +D+ ] - Start seed inserter"
+            print "[ +D+ ] - Begin seed insertion for tracing"
             self.bs.use('seeds')
             for root, dirs, files in os.walk(self.seed_dir):
                 for seed_name in files:
                     os.path.join(root, seed_name)
                     if not self.seed_exists(seed_name):
-                        with open(os.path.join(root, seed_name), 'r') as d:
+                        with open(os.path.join(root, seed_name), 'rb') as d:
                             seed_data = d.read()
 
                         data = {
@@ -49,4 +49,4 @@ class SeedInserter:
         finally:
             self.bs.close()
             self.sql.close()
-            print "[ +D+ ] - Finished seed inserter"
+            print "[ +D+ ] - All seeds inserted for tracing"

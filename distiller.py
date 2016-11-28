@@ -5,7 +5,6 @@ import sqlite3
 import sys
 import threading
 from time import sleep
-from datetime import datetime
 
 from utils.config_import import read_config
 from server.reducer import TraceReducer
@@ -58,9 +57,9 @@ def verify_config(config_file):
 
         prepare_db(config['db_path'], action)
 
-        # Create time-specific dir in output_path
-        config['output_path'] = os.path.join(config['output_path'], datetime.now().strftime("%Y%m%d-%H%M%S"))
-        os.makedirs(config['output_path'])
+        config['output_path'] = os.path.join(config['output_path'], config['project-name'])
+        if not os.path.isdir(config['output_path']):
+            os.makedirs(config['output_path'])
 
     except KeyError:
         raise Exception("Configuration file appears to have been corrupted!")
@@ -91,9 +90,9 @@ def main(config_file):
             reducer = TraceReducer(config)
             reducer.go()
 
-        if "minimize" in config['operation']:
-            minimizer = SeedMinimizer(config)
-            minimizer.go()
+        #if "minimize" in config['operation']:
+        #    minimizer = SeedMinimizer(config)
+        #    minimizer.go()
 
     finally:
         pass

@@ -16,7 +16,7 @@ class TraceProcessor:
         self.job = None
 
     def get_job(self):
-        self.bs.watch('results')
+        self.bs.watch('reduction-results')
         while 'seeds' in self.bs.tubes():
             self.job = self.bs.reserve(20)
             if self.job:
@@ -113,7 +113,7 @@ class TraceProcessor:
                 else:
                     break
             else:
-                self.bs.ignore('results')
+                self.bs.ignore('reduction-results')
 
         finally:
             self.bs.close()

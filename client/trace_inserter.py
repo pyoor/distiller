@@ -74,7 +74,7 @@ class TraceInserter:
 
                     trace = zlib.compress(msgpack.packb(trace_data, use_bin_type=True))
                     # Set long TTR as trace processing may take a while
-                    self.bs.use('results')
+                    self.bs.use('reduction-results')
                     self.bs.put(trace, ttr=600)
                     self.job.delete()
                     break

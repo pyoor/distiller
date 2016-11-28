@@ -1,11 +1,12 @@
 server:
+    project-name: Wordpad
     seed_path: ./seeds/
     db_path: ./backup.db
     output_path: ./results/
     operation:
-        - trace
+        # - trace
+        # - reduce
         - minimize
-       # - shrink
     filter:
         mode: exclude
         modules:
