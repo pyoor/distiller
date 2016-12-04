@@ -1,12 +1,13 @@
-server:
-    project-name: Wordpad
-    seed_path: ./seeds/
-    db_path: ./backup.db
-    output_path: ./results/
+project:
+    name: Wordpad
     operation:
         # - trace
         # - reduce
         - minimize
+server:
+    seed_path: ./seeds/
+    db_path: ./backup.db
+    output_path: ./results/
     filter:
         mode: exclude
         modules:
@@ -16,7 +17,6 @@ server:
         # mode: include
         # modules:
         #     - C:\Program Files\Windows NT\Accessories\wordpad.exe
-
 client:
     host: 192.168.56.1
     drio_path: C:\DynamoRIO\bin32\drrun.exe
