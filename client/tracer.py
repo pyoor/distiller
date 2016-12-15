@@ -31,7 +31,7 @@ class TraceInserter:
     def ready(self):
         self.bs.watch(self.trace_queue)
         self.job = self.bs.reserve(timeout=60)
-        self.bs.ignore('seeds')
+        self.ignore(self.trace_queue)
 
         if self.job:
             return True
