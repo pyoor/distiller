@@ -1,36 +1,28 @@
 #!/usr/bin/python
-import os
 import sys
 
-from utils.config_import import read_config
-from client.trace_inserter import TraceInserter
+from client.tracer import TraceInserter
+from client.minimizer import SeedMinimizer
+from utils.config_import import DistillerConfig
 
 
 def main(config_file):
-    cfg = read_config(config_file, 'client')
+    config = DistillerConfig(config_file, 'client')
 
-    host = cfg['host']
-    d_path = cfg['drio_path']
-    t_path = cfg['target_path']
-    t_args = cfg['target_args']
-    w_time = cfg['wait_time']
-    m_time = cfg['max_timeout']
+    if "trace" in config.operations:
+        tracer = TraceInserter(config)
+        while tracer.ready():
+            tracer.go()
 
-    # Verify file locations
-    if not os.path.isfile(d_path):
-        print "[ +E+ ] - Cannot find DynamoRIO.  Exiting!"
-        sys.exit()
+    '''if "minimize" in config.operations:
+        print "[ +D+ ] Checking for available minimization jobs."
 
-    if not os.path.isfile(t_path):
-        print "[ +E+ ] - Cannot find target binary.  Exiting!"
-        sys.exit()
-
-    # Start tracing
-    tracer = TraceInserter(host, d_path, t_path, t_args, w_time, m_time)
-    while tracer.ready():
-        tracer.go()
-    else:
-        print "[ +D+ ] No more seeds available.  Exiting!"
+        minimizer = SeedMinimizer(config_file)
+        minimizer.wait()
+        while minimizer.is_job_available():
+            minimizer.go()
+        else:
+            print "[ +D+ ] No minimization jobs available."'''
 
 
 def usage():

@@ -2,18 +2,16 @@
 from datetime import datetime
 import os
 import sqlite3
-import msgpack
-import zlib
 import csv
+from common import packer
 
 
 class TraceReducer:
     def __init__(self, config):
-        self.sql = sqlite3.connect(config['db_path'])
+        self.sql = sqlite3.connect(config.db_path)
         self.c = self.sql.cursor()
 
-        filename = "reduction-results.csv"
-        self.out = os.path.join(config['output_path'], filename)
+        self.out = os.path.join(config.output_dir, "reduction-results.csv")
 
         self.master_bblock = {}
         self.master_bbcount = {}
@@ -22,6 +20,9 @@ class TraceReducer:
         self.module_table = None
 
     def reduce(self):
+        # ToDo: Perform an initial comparison of seed to determine percentage of master list
+        # ToDo: Use this method instead of ublock_cnt to determine which seeds to parse first
+        # ToDo: Rerun for each file
         self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY ublock_cnt DESC''')
         seeds = self.c.fetchall()
 
@@ -32,7 +33,7 @@ class TraceReducer:
             data = self.c.fetchone()
 
             ublock_cnt = data[0]
-            trace_data = msgpack.unpackb(zlib.decompress(data[1]))
+            trace_data = packer.unpack(data[1])
 
             # Save seed->ublock_cnt lookup
             self.master_bbcount[seed_name] = ublock_cnt

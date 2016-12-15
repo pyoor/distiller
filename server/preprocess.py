@@ -1,23 +1,26 @@
 import beanstalkc
 import sqlite3
-import msgpack
-import zlib
 import re
+from common import packer
 
 
 class TraceProcessor:
     def __init__(self, config):
         self.bs = beanstalkc.Connection(host='127.0.0.1', port=11300)
-        self.sql = sqlite3.connect(config['db_path'], check_same_thread=False)
+        self.sql = sqlite3.connect(config.db_path, check_same_thread=False)
         self.c = self.sql.cursor()
-        self.flt = config['filter']['mode']
-        self.mods = config['filter']['modules']
+
+        self.trace_queue = config.trace_queue
+        self.trace_results = config.trace_results
+
+        self.flt = config.mode
+        self.mods = config.modules
 
         self.job = None
 
-    def get_job(self):
-        self.bs.watch('reduction-results')
-        while 'seeds' in self.bs.tubes():
+    def job_available(self):
+        self.bs.watch(self.trace_results)
+        while self.trace_queue in self.bs.tubes():
             self.job = self.bs.reserve(20)
             if self.job:
                 break
@@ -33,10 +36,8 @@ class TraceProcessor:
         try:
             print "[ +D+ ] - Start preprocessor"
             while True:
-                # Hackish
-                # May fail with multiple threads
-                if self.get_job():
-                    trace = msgpack.unpackb(zlib.decompress(self.job.body))
+                if self.job_available():
+                    trace = packer.unpack(self.job.body)
                     seed_name = trace['seed_name']
                     data = trace['data']
 
@@ -97,9 +98,11 @@ class TraceProcessor:
                                     trace_data[bblock] = ins_cnt
 
                         ublock_cnt = len(trace_data)
-                        trace_pack = zlib.compress(msgpack.packb(trace_data))
+                        trace_pack = packer.pack(trace_data)
 
                         # This should be refactored
+                        # ToDo: Add a check at the top of this function to determine if the seed exists
+                        # ToDo: If so, no need to parse the trace
                         try:
                             self.c.execute('INSERT INTO key_lookup VALUES (?,?,?)',
                                            (seed_name, ublock_cnt, sqlite3.Binary(trace_pack), ))

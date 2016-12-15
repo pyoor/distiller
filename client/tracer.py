@@ -1,20 +1,24 @@
 import beanstalkc
-import msgpack
 import os
 import tempfile
 from time import sleep
-import zlib
-from trace_runner import TraceRunner
+
+import runner
+from common import packer
 
 
 class TraceInserter:
-    def __init__(self, host, drio_path, target_path, target_args, wait_time, max_timeout):
-        self.bs = beanstalkc.Connection(host)
-        self.d_path = drio_path
-        self.t_path = target_path
-        self.t_args = target_args
-        self.w_time = wait_time
-        self.max_timeout = max_timeout
+    def __init__(self, config):
+        self.bs = beanstalkc.Connection(config.host)
+        self.d_path = config.drio_path
+        self.t_path = config.target_path
+        self.t_args = config.target_args
+        self.w_time = config.w_time
+        self.m_time = config.m_time
+        self.project_name = config.project_name
+
+        self.trace_queue = config.trace_queue
+        self.trace_results = config.trace_results
 
         self.job = None
         self.s_name = None
@@ -25,17 +29,18 @@ class TraceInserter:
         self.s_path = None
 
     def ready(self):
-        self.bs.watch('seeds')
+        self.bs.watch(self.trace_queue)
         self.job = self.bs.reserve(timeout=60)
         self.bs.ignore('seeds')
 
         if self.job:
             return True
         else:
+            print "[ +D+ ] No trace jobs available."
             return False
 
     def parse(self):
-        body = msgpack.unpackb(self.job.body)
+        body = packer.unpack(self.job.body)
         self.s_name = body['name']
         self.s_data = body['data']
         self.s_ext = os.path.splitext(self.s_name)[1]
@@ -59,29 +64,25 @@ class TraceInserter:
     def insert(self):
         for i in range(0, 3):
             try:
-                runner = TraceRunner(self.d_path, self.t_path, self.t_args, self.s_name, self.s_path, self.w_time, self.max_timeout)
+                print "[ +D+ ] - Attempting to trace %s" % self.s_name
+                logfile = runner.run(self.d_path, self.t_path, self.t_args, self.s_name, self.s_path, self.w_time, self.m_time)
 
-                # Run trace
-                runner.go()
-
-                # Sleep 2s before checking log file
-                sleep(2)
-                if runner.log:
+                if logfile is not None:
                     trace_data = {
                         'seed_name': self.s_name,
-                        'data': runner.log
+                        'data': logfile
                     }
 
-                    trace = zlib.compress(msgpack.packb(trace_data, use_bin_type=True))
+                    trace = packer.pack(trace_data)
                     # Set long TTR as trace processing may take a while
-                    self.bs.use('reduction-results')
+                    self.bs.use(self.trace_results)
                     self.bs.put(trace, ttr=600)
                     self.job.delete()
                     break
                 else:
                     print "[ +E+ ] - Error retrieving log file. Restarting."
 
-            except Exception:
+            except Exception as e:
                 print "[ +D+ ] - Something went wrong. Restarting."
 
         else:
