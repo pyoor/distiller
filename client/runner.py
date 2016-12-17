@@ -8,11 +8,10 @@ from glob import glob
 from time import sleep, time
 
 
-def run(dynamo_path, target_path, target_args, seed_name, seed_path, wait_time, max_timeout):
+def run(dynamo_path, target_path, target_args, seed_path, wait_time, max_timeout):
     """
     Instrument target process with seed
     """
-    print "[ +D+ ] - Running seed: %s" % os.path.basename(seed_name)
     log_path = tempfile.mkdtemp()
     devnull = open(os.devnull, 'w')
     command = [dynamo_path, '-t', 'drcov', '-dump_text', '-logdir', log_path, '--', target_path, target_args, seed_path]

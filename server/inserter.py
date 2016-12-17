@@ -44,8 +44,8 @@ class Inserter(object):
         }
 
         seed_pack = packer.pack(data)
-        self.bs.use(tube)
 
+        self.bs.use(tube)
         while True:
             if self.bs.stats_tube(tube)['current-jobs-ready'] < 20:
                 print "[ +D+ ] - Pushing seed: %s" % seed_name
@@ -54,7 +54,10 @@ class Inserter(object):
             else:
                 sleep(1)
 
+        self.bs.use('default')
+
     def insert_seed(self):
+        print "[ +D+ ] - Start Seed Inserter"
         for root, dirs, files in os.walk(self.seed_dir):
             for seed_name in files:
                 seed_path = os.path.join(root, seed_name)
@@ -63,9 +66,14 @@ class Inserter(object):
                 else:
                     print "[ +D+ ] - Trace for seed exists in database: %s" % seed_name
 
+        print "[ +D+ ] - Seed Inserter Completed"
+
     def insert_mincase(self):
+        print "[ +D+ ] - Start Mincase Inserter"
         self.c.execute('''SELECT seed_name FROM results''')
         for seed_name in self.c.fetchall():
             if not self.seed_minimized(seed_name):
                 seed_path = os.path.join(self.seed_dir, seed_name)
                 self.insert(seed_path, seed_name, self.min_queue)
+
+        print "[ +D+ ] - Mincase Inserter Completed"

@@ -35,7 +35,7 @@ class DistillerConfig:
                 self.db_path = self.config['db_path']
 
                 action = None
-                if os.path.isfile(self.db_path):
+                if os.path.isfile(self.db_path) and ("reduce" in self.operations or "trace" in self.operations):
                     while action != "R" and action != "A":
                         action = raw_input("Database Exists! [R]eplace or [A]ppend? ").upper()
 

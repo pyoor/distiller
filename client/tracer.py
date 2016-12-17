@@ -65,7 +65,7 @@ class TraceInserter:
         for i in range(0, 3):
             try:
                 print "[ +D+ ] - Attempting to trace %s" % self.s_name
-                logfile = runner.run(self.d_path, self.t_path, self.t_args, self.s_name, self.s_path, self.w_time, self.m_time)
+                logfile = runner.run(self.d_path, self.t_path, self.t_args, self.s_path, self.w_time, self.m_time)
 
                 if logfile is not None:
                     trace_data = {

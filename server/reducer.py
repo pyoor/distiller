@@ -22,7 +22,7 @@ class TraceReducer:
     def reduce(self):
         # ToDo: Perform an initial comparison of seed to determine percentage of master list
         # ToDo: Use this method instead of ublock_cnt to determine which seeds to parse first
-        # ToDo: Rerun for each file
+        # ToDo: Rerun for each file to perform iterative minimization
         self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY ublock_cnt DESC''')
         seeds = self.c.fetchall()
 
