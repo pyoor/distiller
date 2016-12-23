@@ -41,6 +41,12 @@ class TraceProcessor:
                     seed_name = trace['seed_name']
                     data = trace['data']
 
+                    self.c.execute('SELECT * FROM key_lookup WHERE seed_name = ?', seed_name)
+                    exists = self.c.fetchall()
+                    if exists:
+                        print "[ +E+ ] - Seed already exists in database.  Discarding - %s" % seed_name
+                        continue
+
                     md = re.search(r'Module Table:.*?\n(.*?)BB Table', data, re.DOTALL)
                     td = re.search(r'module id, start, size:\n(.*)', data, re.DOTALL)
 
@@ -72,12 +78,12 @@ class TraceProcessor:
 
                         # Update module number using the value stored in the db
                         # Only store lines containing the highest ins_cnt
-                        trace_data = {}
+                        trace_data = set()
                         for line in raw_trace.splitlines():
                             match = re.search("module\[(.*)\]: (.*), (.*)", line.strip())
                             m_num = match.group(1).strip()
                             m_ins = match.group(2)
-                            ins_cnt = int(match.group(3))
+                            # ins_cnt = int(match.group(3))
 
                             # Replace module number with value stored in mod_table
                             # Append instruction address to the module number
@@ -88,28 +94,17 @@ class TraceProcessor:
 
                             if m_num in mod_table:
                                 bblock = "%s+%s" % (mod_table[m_num], m_ins)
-
-                                # If the bblock doesn't exist, add it
-                                # If it does and has a higher ins_cnt, replace it
-                                if bblock in trace_data:
-                                    if trace_data[bblock] < ins_cnt:
-                                        trace_data[bblock] = ins_cnt
-                                else:
-                                    trace_data[bblock] = ins_cnt
+                                trace_data.update([bblock])
 
                         ublock_cnt = len(trace_data)
-                        trace_pack = packer.pack(trace_data)
+                        trace_pack = packer.pack(list(trace_data))
 
-                        # This should be refactored
-                        # ToDo: Add a check at the top of this function to determine if the seed exists
-                        # ToDo: If so, no need to parse the trace
                         try:
                             self.c.execute('INSERT INTO key_lookup VALUES (?,?,?)',
                                            (seed_name, ublock_cnt, sqlite3.Binary(trace_pack), ))
                             self.sql.commit()
                         except sqlite3.IntegrityError:
                             print "[ +E+ ] - Seed already exists in database: %s" % seed_name
-                            print "[ +E+ ] - This should never happen!"
 
                         print "[ +D+ ] - Processed trace for seed %s covering %s unique blocks" % (seed_name, ublock_cnt)
                     self.job.delete()
