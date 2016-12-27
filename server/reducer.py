@@ -28,8 +28,6 @@ class TraceReducer:
         # Remove blocks array from master_list
         temp = set(self.master_bblock) - set(bblocks)
         self.master_bblock = temp
-        if '19+0x001688ad' in temp:
-            print "foo"
 
     def reduce(self):
         # Retrieve best seed
