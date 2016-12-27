@@ -2,6 +2,7 @@ import yaml
 import os
 import sqlite3
 
+
 class DistillerConfig:
     def __init__(self, config_file, section):
         self.config = read_config(config_file, section)
@@ -46,8 +47,10 @@ class DistillerConfig:
                     c = sql.cursor()
                     c.execute('''CREATE TABLE IF NOT EXISTS modules
                     (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-                    c.execute('''CREATE TABLE IF NOT EXISTS key_lookup
-                    (seed_name TEXT PRIMARY KEY, ublock_cnt INT, traces BLOB)''')
+                    c.execute('''CREATE TABLE IF NOT EXISTS seeds
+                        (num INTEGER PRIMARY KEY, name TEXT, ublock_cnt, trace BLOB, UNIQUE (name))''')
+                    c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
+                    (bblock TEXT PRIMARY KEY)''')
 
                     # Results are calculated using the full data set
                     # Wipe if they exist

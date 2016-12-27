@@ -41,9 +41,8 @@ class TraceProcessor:
                     seed_name = trace['seed_name']
                     data = trace['data']
 
-                    self.c.execute('SELECT * FROM key_lookup WHERE seed_name = ?', seed_name)
-                    exists = self.c.fetchall()
-                    if exists:
+                    self.c.execute('SELECT * FROM seeds WHERE name = ?', [seed_name])
+                    if self.c.fetchone():
                         print "[ +E+ ] - Seed already exists in database.  Discarding - %s" % seed_name
                         continue
 
@@ -100,11 +99,16 @@ class TraceProcessor:
                         trace_pack = packer.pack(list(trace_data))
 
                         try:
-                            self.c.execute('INSERT INTO key_lookup VALUES (?,?,?)',
+                            self.c.execute('INSERT INTO seeds VALUES (null,?,?,?)',
                                            (seed_name, ublock_cnt, sqlite3.Binary(trace_pack), ))
                             self.sql.commit()
                         except sqlite3.IntegrityError:
                             print "[ +E+ ] - Seed already exists in database: %s" % seed_name
+
+                        self.c.execute('BEGIN TRANSACTION')
+                        for bblock in trace_data:
+                            self.c.execute('INSERT OR IGNORE INTO master_lookup VALUES (?)', (bblock, ))
+                        self.sql.commit()
 
                         print "[ +D+ ] - Processed trace for seed %s covering %s unique blocks" % (seed_name, ublock_cnt)
                     self.job.delete()

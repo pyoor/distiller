@@ -21,7 +21,7 @@ class Inserter(object):
         self.c = self.sql.cursor()
 
     def seed_traced(self, seed_name):
-        self.c.execute("SELECT * FROM key_lookup WHERE seed_name = ?", [seed_name])
+        self.c.execute("SELECT num FROM seeds WHERE name = ?", [seed_name])
         if self.c.fetchone() is not None:
             return True
         else:

@@ -2,7 +2,6 @@
 from datetime import datetime
 import os
 import sqlite3
-import csv
 from common import packer
 
 
@@ -10,66 +9,64 @@ class TraceReducer:
     def __init__(self, config):
         self.sql = sqlite3.connect(config.db_path)
         self.c = self.sql.cursor()
-
         self.out = os.path.join(config.output_dir, "reduction-results.csv")
+        self.master_bblock = self.retrieve_master()
+        self.master_bbcount = len(self.master_bblock)
+        self.results = []
 
-        self.master_bblock = {}
-        self.master_bbcount = {}
-        self.master_inscount = {}
+    def retrieve_master(self):
+        try:
+            self.c.execute('''SELECT * FROM master_lookup''')
+            res = self.c.fetchall()
+            master_bblock = [i[0] for i in res]
+        except:
+            raise Exception("Error retrieving master list!")
 
-        self.module_table = None
+        return master_bblock
+
+    def remove_from_master(self, bblocks):
+        # Remove blocks array from master_list
+        temp = set(self.master_bblock) - set(bblocks)
+        self.master_bblock = temp
+        if '19+0x001688ad' in temp:
+            print "foo"
 
     def reduce(self):
-        # ToDo: Perform an initial comparison of seed to determine percentage of master list
-        # ToDo: Use this method instead of ublock_cnt to determine which seeds to parse first
-        # ToDo: Rerun for each file to perform iterative minimization
-        self.c.execute('''SELECT seed_name FROM key_lookup ORDER BY ublock_cnt DESC''')
-        seeds = self.c.fetchall()
+        # Retrieve best seed
+        try:
+            self.c.execute('''SELECT num, trace FROM seeds ORDER BY ublock_cnt DESC LIMIT 1''')
+            res = self.c.fetchone()
+            best_seed = res[0]
+            best_trace = packer.unpack(res[1])
+        except:
+            raise Exception("Can't reduce - No seeds found!")
 
-        for seed in seeds:
-            seed_name = seed[0]
+        self.results.append(best_seed)
+        self.remove_from_master(best_trace)
 
-            self.c.execute('''SELECT ublock_cnt, traces FROM key_lookup WHERE seed_name = ?''', [seed_name])
-            data = self.c.fetchone()
+        blockmap = {}
+        self.c.execute('''SELECT num, trace FROM seeds''')
+        for row in self.c:
+            seed = row[0]
+            trace = packer.unpack(row[1])
+            blockmap[seed] = list(set(self.master_bblock).intersection(trace))
 
-            ublock_cnt = data[0]
-            trace_data = packer.unpack(data[1])
+        r_seed = best_seed
+        while self.master_bblock:
+            # Remove seeds already in results from blockmap
+            del blockmap[r_seed]
 
-            # Save seed->ublock_cnt lookup
-            self.master_bbcount[seed_name] = ublock_cnt
+            # Find next seed with the most matches
+            hitcount = {}
+            for seed, bblock in blockmap.iteritems():
+                # Recalculate similar items between both lists
+                hitcount[seed] = list(set(self.master_bblock).intersection(blockmap[seed]))
 
-            print "[ +D+ ] - Merging %s with %s blocks into the master list." % (seed_name, ublock_cnt)
+            r_seed = max(hitcount, key=lambda x: len(set(hitcount[x])))
+            self.results.append(r_seed)
+            self.remove_from_master(blockmap[r_seed])
 
-            for bblock, ins_count in trace_data.iteritems():
-                if bblock not in self.master_bblock:
-                    self.master_bblock[bblock] = seed_name
-                    self.master_inscount[bblock] = ins_count
-
-                # If basic_block exists and new trace has bigger ins_count, replace it
-                elif self.master_inscount[bblock] < ins_count:
-                    self.master_bblock[bblock] = seed_name
-                    self.master_inscount[bblock] = ins_count
-
-    def report(self):
-        # Create results table
-        block_results = sorted(set(self.master_bblock.itervalues()))
-        for seed_name in block_results:
-            self.c.execute('INSERT INTO results VALUES (?,?)', (seed_name, self.master_bbcount[seed_name]))
-        self.sql.commit()
-
-        self.c.execute('''SELECT * FROM results''')
-        seed_results = self.c.fetchall()
-        print "[ +D+ ] - Reduced set to %s covering %s unique blocks." % (len(block_results), len(self.master_bblock))
-
-        self.c.execute('''SELECT * FROM results ORDER BY ublock_cnt DESC LIMIT 1;''')
-        best_seed = self.c.fetchone()
-        print "[ +D+ ] - Best seed %s covers %s unique blocks." % (best_seed[0], best_seed[1])
-
-        with open(self.out, 'wb') as f:
-            writer = csv.writer(f)
-            writer.writerow(['Seed Name', 'Unique Block Count'])
-            writer.writerows(seed_results)
-        print "[ +D+ ] - Wrote results to %s" % self.out
+        print "wtf"
 
     def go(self):
         print "[ +D+ ] - Start reducer."
