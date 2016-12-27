@@ -8,5 +8,5 @@ def unpack(job):
 
 
 def pack(job):
-    data = zlib.compress(msgpack.packb(job, use_bin_type=True))
+    data = zlib.compress(msgpack.packb(job, use_bin_type=True), 9)
     return data
