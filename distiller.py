@@ -13,22 +13,6 @@ from server.reducer import TraceReducer
 from utils.config_import import DistillerConfig
 
 
-def prepare_db(db_path, action):
-    if action == "R":
-        os.remove(db_path)
-
-    sql = sqlite3.connect(db_path)
-    c = sql.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS modules (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-    c.execute('''CREATE TABLE IF NOT EXISTS key_lookup (seed_name TEXT PRIMARY KEY, ublock_cnt INT, traces BLOB)''')
-
-    # Results are calculated using the full data set
-    # Wipe if they exist
-    c.execute('''DROP TABLE IF EXISTS results''')
-    c.execute('''CREATE TABLE results (seed_name TEXT PRIMARY KEY, ublock_cnt INT)''')
-    sql.commit()
-
-
 def check_beanstalk():
     try:
         beanstalkc.Connection(host='127.0.0.1', port=11300)
