@@ -1,7 +1,9 @@
 #!/usr/bin/python
-from datetime import datetime
+import csv
 import os
 import sqlite3
+from datetime import datetime
+
 from common import packer
 
 
@@ -33,9 +35,9 @@ class TraceReducer:
         # Retrieve best seed
         try:
             self.c.execute('''SELECT num, trace FROM seeds ORDER BY ublock_cnt DESC LIMIT 1''')
-            res = self.c.fetchone()
-            best_seed = res[0]
-            best_trace = packer.unpack(res[1])
+            row = self.c.fetchone()
+            best_seed = row[0]
+            best_trace = packer.unpack(row[1])
         except:
             raise Exception("Can't reduce - No seeds found!")
 
@@ -64,10 +66,28 @@ class TraceReducer:
             self.results.append(r_seed)
             self.remove_from_master(blockmap[r_seed])
 
-        print "wtf"
+    def report(self):
+        # Create results table
+        self.c.execute('BEGIN TRANSACTION')
+        for seed in self.results:
+            self.c.execute('INSERT INTO results SELECT name, ublock_cnt FROM seeds WHERE NUM = ?', (seed,))
+        self.sql.commit()
+
+        print "[ +D+ ] - Reduced set to %d covering %s unique blocks." % (len(self.results), self.master_bbcount)
+
+        self.c.execute('''SELECT * FROM results ORDER BY ublock_cnt DESC''')
+        results = self.c.fetchall()
+        print "[ +D+ ] - Best seed %s covers %s unique blocks." % (results[0][0], results[0][1])
+
+        with open(self.out, 'wb') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Seed Name', 'Unique Block Count'])
+            for row in results:
+                writer.writerow(row)
+        print "[ +D+ ] - Wrote results to %s" % self.out
 
     def go(self):
-        print "[ +D+ ] - Start reducer."
+        print "[ +D+ ] - Start reduction"
         n1 = datetime.now()
 
         # Reduce traces
