@@ -55,7 +55,7 @@ class DistillerConfig:
                     # Results are calculated using the full data set
                     # Wipe if they exist
                     c.execute('''DROP TABLE IF EXISTS results''')
-                    c.execute('''CREATE TABLE results (seed_name TEXT PRIMARY KEY, ublock_cnt INT)''')
+                    c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
                     sql.commit()
             except KeyError:
                 raise Exception("No database path defined.")
