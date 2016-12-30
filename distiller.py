@@ -7,7 +7,6 @@ import threading
 from time import sleep
 
 from server.inserter import Inserter
-from server.minprocessor import MinProcessor
 from server.preprocess import TraceProcessor
 from server.reducer import TraceReducer
 from utils.config_import import DistillerConfig
@@ -43,19 +42,6 @@ def main(config_file):
         if "reduce" in config.operations:
             reducer = TraceReducer(config)
             reducer.go()
-
-        '''if "minimize" in config.operations:
-            inserter = Inserter(config)
-            t1 = threading.Thread(target=inserter.insert_mincase)
-            t1.start()
-
-            sleep(10)
-            minprocessor = MinProcessor(config)
-            t2 = threading.Thread(target=minprocessor.go)
-            t2.start()
-
-            t1.join()
-            t2.join()'''
 
     finally:
         pass
