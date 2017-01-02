@@ -7,29 +7,38 @@ A distributed corpus distillation tool for windows applications.
 
 ### Overview
 ----------
-Distiller works in two modes:
+Distiller can be configured to work in multiple modes.
 
-#### Tracing:
-Seeds are pushed into the beanstalk tube and distributed to clients for tracing.  The initial trace results are uniq'd and stored for later analysis.
+#### Tracing
+This mode distributes seeds for tracing.
 
-#### Reduction:
-After all seeds have been traced, a master list of unique blocks is generated.
-* Seeds are sorted by largest block count.
-* If a seed introduces a new block, it is added to the master list.
-* If a seed contains a block with a larger instruction count than previously identified, the record is replaced.
+#### Preprocessing
+This mode prepares traces for reduction.
+
+* A set of unique blocks covered by each trace is compressed and stored. 
+* A master list containing all blocks covered by each trace is maintained.
+* New blocks introduced by incoming traces are added to the master list.
+
+#### Reduction
+This mode generates the corpus from all available traces
+
+* The trace containing the largest unique block count is selected and added to the corpus.  Blocks within this trace are removed from the master list.
+* A mapping of all remaining blocks and those traces which include them is created.  This requires a single iteration of all traces within the database.
+* The trace containing the next highest block count is then added to the corpus.  The blocks covered by this trace are then removed from the master list.
+* This process is repeated until all blocks contained within the master list have been covered.
 
 *All records are stored in an SQLite database.  New seeds can easily be added later and reprocessed.*
 
 
-### Installation:
+### Installation
 ----------
-#### Server requirements:
+#### Server requirements
 The server components require beanstalkc, pyyaml, and msgpack:
 
-* ```pip install beanstalkc pyyaml msgpack-python```
+ ```pip install beanstalkc pyyaml msgpack-python```
 
 
-#### Client requirements:
+#### Client requirements
 The client components require beanstalkc, pyyaml, msgpack, and psutil:
 
 * ```pip install beanstalkc pyyaml msgpack-python psutil```
@@ -38,33 +47,42 @@ The client also requires DynamoRIO.  Tested with version 6.1
     https://github.com/DynamoRIO/dynamorio/wiki/Downloads
     
 
-### Basic Usage:
+### Basic Usage
 ----------
 Server-side:
 
+* ```beanstalkd -z 30000000000```
 * ```python distiller.py ./configs/wordpad.yml```
+```
+[ +D+ ] - Start Seed Inserter
+[ +D+ ] - Pushing seed: 2.rtf
+[ +D+ ] - Pushing seed: 3.3.rtf
+[ +D+ ] - Pushing seed: 1.2.rtf
+[ +D+ ] - Pushing seed: 3.rtf
+[...truncated...]
+[ +D+ ] - Seed Inserter Completed
+[ +D+ ] - Start preprocessor
+[ +D+ ] - Processed trace for seed 2.rtf covering 5082 unique blocks
+[ +D+ ] - Processed trace for seed 3.3.rtf covering 5152 unique blocks
+[ +D+ ] - Processed trace for seed 1.2.rtf covering 4965 unique blocks
+[ +D+ ] - Processed trace for seed 3.rtf covering 5152 unique blocks
+[ +D+ ] - All traces have been processed
+[ +D+ ] - Start reduction
+[ +D+ ] - Reduced set to 2 covering 5157 unique blocks.
+[ +D+ ] - Best seed 3.3.rtf covers 5152 unique blocks.
+[ +D+ ] - Wrote results to ./results/reduction-results.csv
+[ +D+ ] - Reduction completed in 0s
+```
 
 Client-side:
 
 * ```python agent.py .\configs\wordpad.yml```
-
 ```
-[ +D+ ] - Start seed inserter
-[ +D+ ] - Pushing seed: 2.rtf
-[ +D+ ] - Pushing seed: 3.rtf
-[ +D+ ] - Pushing seed: 1.rtf
-[ +D+ ] - Finished seed inserter
-[ +D+ ] - Start preprocessor
-[ +D+ ] - Processed trace for seed 2.rtf covering 153849 unique blocks
-[ +D+ ] - Processed trace for seed 3.rtf covering 160985 unique blocks
-[ +D+ ] - Processed trace for seed 1.rtf covering 148383 unique blocks
-[ +D+ ] - All traces have been processed
-[ +D+ ] - Start reducer.
-[ +D+ ] - Merging 3.rtf with 160985 blocks into the master list.
-[ +D+ ] - Merging 2.rtf with 153849 blocks into the master list.
-[ +D+ ] - Merging 1.rtf with 148383 blocks into the master list.
-[ +D+ ] - Reduced set to 3 covering 162072 unique blocks.
-[ +D+ ] - Best seed 3.rtf covers 160985 unique blocks.
-[ +D+ ] - Wrote results to ./results/20161127-232237.csv
-[ +D+ ] - Reduction completed in 0s
+F:\>python agent.py configs\wordpad.yml
+[ +D+ ] - Attempting to trace 2.rtf
+[ +D+ ] - Attempting to trace 3.3.rtf
+[ +D+ ] - Attempting to trace 1.2.rtf
+[ +D+ ] - Attempting to trace 3.rtf
+[...truncated...]
+[ +D+ ] No trace jobs available.
 ```
