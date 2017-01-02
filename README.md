@@ -35,7 +35,7 @@ This mode generates the corpus from all available traces
 #### Server requirements
 The server components require beanstalkc, pyyaml, and msgpack:
 
- ```pip install beanstalkc pyyaml msgpack-python```
+ * ```pip install beanstalkc pyyaml msgpack-python```
 
 
 #### Client requirements
