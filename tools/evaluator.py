@@ -1,8 +1,10 @@
+import sys
+sys.path.append("../")
+
 import os
 import re
 import tempfile
 from time import sleep
-import sys
 from client import runner
 from utils.config_import import DistillerConfig
 
@@ -43,9 +45,6 @@ class TargetEvaluator:
     def clean(self):
         while True:
             try:
-                if os.path.isfile(self.seed.name):
-                    os.remove(self.seed.name)
-
                 if os.path.isfile(self.temp.name):
                     os.remove(self.temp.name)
             except WindowsError:
