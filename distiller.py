@@ -1,7 +1,5 @@
 #!/usr/bin/python
 import beanstalkc
-import os
-import sqlite3
 import sys
 import threading
 from time import sleep
