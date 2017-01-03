@@ -2,7 +2,6 @@
 import sys
 
 from client.tracer import TraceInserter
-from client.minimizer import SeedMinimizer
 from utils.config_import import DistillerConfig
 
 

@@ -82,7 +82,7 @@ class TraceInserter:
                 else:
                     print "[ +E+ ] - Error retrieving log file. Restarting."
 
-            except Exception as e:
+            except:
                 print "[ +D+ ] - Something went wrong. Restarting."
 
         else:
