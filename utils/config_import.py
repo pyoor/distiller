@@ -66,6 +66,11 @@ class DistillerConfig:
                 raise Exception("No seed dir defined.")
 
             try:
+                self.trace_dir = self.config['trace_dir']
+            except KeyError:
+                raise Exception("No trace dir defined.")
+
+            try:
                 if "reduce" in self.operations or "minimize" in self.operations:
                     self.output_dir = self.config['output_dir']
                     try:

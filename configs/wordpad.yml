@@ -6,16 +6,17 @@ project:
         # - minimize
     filter:
         mode: exclude
-        #modules:
-        #    - <unknown>
-        #    - C:\DynamoRIO\lib32\release\dynamorio.dll
-        #    - C:\DynamoRIO\tools\lib32\release\drcov.dll
-        mode: include
         modules:
-            - C:\Program Files\Windows NT\Accessories\wordpad.exe
+            - <unknown>
+            - C:\DynamoRIO\lib32\release\dynamorio.dll
+            - C:\DynamoRIO\tools\lib32\release\drcov.dll
+        #mode: include
+        #modules:
+        #    - C:\Program Files\Windows NT\Accessories\wordpad.exe
 server:
     db_path: ./backup.db
     seed_dir: ./seeds/
+    trace_dir: ./traces/
     output_dir: ./results/
 client:
     host: 192.168.56.1
