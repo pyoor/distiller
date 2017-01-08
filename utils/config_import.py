@@ -48,7 +48,7 @@ class DistillerConfig:
                     c.execute('''CREATE TABLE IF NOT EXISTS modules
                     (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
                     c.execute('''CREATE TABLE IF NOT EXISTS seeds
-                        (num INTEGER PRIMARY KEY, name TEXT, ublock_cnt, UNIQUE (name))''')
+                        (num INTEGER PRIMARY KEY, s_name TEXT, t_name, ublock_cnt, UNIQUE (name))''')
                     c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
                     (bblock TEXT PRIMARY KEY)''')
 
