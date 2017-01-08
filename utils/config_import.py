@@ -63,12 +63,19 @@ class DistillerConfig:
             try:
                 self.seed_dir = self.config['seed_dir']
             except KeyError:
-                raise Exception("No seed dir defined.")
+                raise Exception("No seed directory defined.")
 
             try:
                 self.trace_dir = self.config['trace_dir']
+                if not os.path.isdir(self.trace_dir):
+                    try:
+                        os.makedirs(self.trace_dir)
+                    except os.error:
+                        pass
+                    except:
+                        raise Exception("Could not create trace directory!")
             except KeyError:
-                raise Exception("No trace dir defined.")
+                raise Exception("No trace directory defined.")
 
             try:
                 if "reduce" in self.operations or "minimize" in self.operations:
@@ -83,7 +90,7 @@ class DistillerConfig:
                     self.output_dir = None
                     self.min_dir = None
             except KeyError:
-                raise Exception("No output path defined.")
+                raise Exception("No output directory defined.")
 
         elif section == "client":
             try:
