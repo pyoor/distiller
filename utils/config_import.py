@@ -145,20 +145,3 @@ def read_config(config_file, section):
         raise Exception(" Unable to find section %s" % section)
 
     return config
-
-
-def main(config):
-    x = DistillerConfig(config, 'server')
-    print "foo"
-
-
-def usage():
-    print "Usage:", sys.argv[0], "<config.yml>"
-
-
-import sys
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        usage()
-    else:
-        main(sys.argv[1])
