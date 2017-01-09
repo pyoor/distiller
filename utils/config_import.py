@@ -46,11 +46,11 @@ class DistillerConfig:
                     sql = sqlite3.connect(self.db_path)
                     c = sql.cursor()
                     c.execute('''CREATE TABLE IF NOT EXISTS modules
-                    (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
+                        (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
                     c.execute('''CREATE TABLE IF NOT EXISTS seeds
-                        (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name, ublock_cnt, UNIQUE (name))''')
+                        (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
                     c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
-                    (bblock TEXT PRIMARY KEY)''')
+                        (bblock TEXT PRIMARY KEY)''')
 
                     # Results are calculated using the full data set
                     # Wipe if they exist
