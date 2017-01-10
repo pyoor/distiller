@@ -11,7 +11,6 @@ class Inserter(object):
         self.project_name = config.project_name
         self.db_path = config.db_path
         self.seed_dir = config.seed_dir
-        self.output_dir = config.output_dir
         self.min_dir = config.min_dir
         self.trace_queue = config.trace_queue
         self.min_queue = config.min_queue
