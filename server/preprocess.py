@@ -1,6 +1,7 @@
 import beanstalkc
 import sqlite3
 import re
+import os
 from common import packer
 
 
@@ -15,6 +16,7 @@ class TraceProcessor:
 
         self.flt = config.mode
         self.mods = config.modules
+        self.trace_dir = config.trace_dir
 
         self.job = None
 
@@ -32,22 +34,49 @@ class TraceProcessor:
         else:
             return False
 
+    def store_results(self, seed_name, trace_name, trace_path, processed_trace):
+        ublock_cnt = len(processed_trace)
+
+        try:
+            trace_pack = packer.pack(list(processed_trace))
+            with open(trace_path, 'wb') as f:
+                f.write(trace_pack)
+        except:
+            print "[ +E+ ] - Error saving trace file.  Discarding!" % trace_name
+            return
+
+        try:
+            # Insert seed and update master list
+            self.c.execute('BEGIN TRANSACTION')
+            self.c.execute('INSERT INTO seeds VALUES (null,?,?,?)', (seed_name, trace_name, ublock_cnt))
+
+            for bblock in processed_trace:
+                self.c.execute('INSERT OR IGNORE INTO master_lookup VALUES (?)', (bblock,))
+
+            self.sql.commit()
+        except:
+            print "[ +E+ ] - Error updating database.  Discarding!" % trace_name
+            if os.path.isfile(trace_path):
+                os.path.remove(trace_path)
+            return
+
+        print "[ +D+ ] - Processed trace for seed %s covering %s unique blocks" % (seed_name, ublock_cnt)
+
     def go(self):
         try:
             print "[ +D+ ] - Start preprocessor"
             while True:
                 if self.job_available():
-                    trace = packer.unpack(self.job.body)
-                    seed_name = trace['seed_name']
-                    data = trace['data']
+                    trace_job = packer.unpack(self.job.body)
 
-                    self.c.execute('SELECT * FROM seeds WHERE name = ?', [seed_name])
-                    if self.c.fetchone():
-                        print "[ +E+ ] - Seed already exists in database.  Discarding - %s" % seed_name
-                        continue
+                    seed_name = trace_job['seed_name']
+                    trace_data = trace_job['data']
 
-                    md = re.search(r'Module Table:.*?\n(.*?)BB Table', data, re.DOTALL)
-                    td = re.search(r'module id, start, size:\n(.*)', data, re.DOTALL)
+                    trace_name = os.path.splitext(seed_name)[0] + ".trace"
+                    trace_path = os.path.join(self.trace_dir, trace_name)
+
+                    md = re.search(r'Module Table:.*?\n(.*?)BB Table', trace_data, re.DOTALL)
+                    td = re.search(r'module id, start, size:\n(.*)', trace_data, re.DOTALL)
 
                     if md and td:
                         module_data = md.group(1)
@@ -77,12 +106,11 @@ class TraceProcessor:
 
                         # Update module number using the value stored in the db
                         # Only store lines containing the highest ins_cnt
-                        trace_data = set()
+                        processed_trace = set()
                         for line in raw_trace.splitlines():
-                            match = re.search("module\[(.*)\]: (.*), (.*)", line.strip())
+                            match = re.search("module\[(.*)\]: 0x(.*), (.*)", line.strip())
                             m_num = match.group(1).strip()
                             m_ins = match.group(2)
-                            # ins_cnt = int(match.group(3))
 
                             # Replace module number with value stored in mod_table
                             # Append instruction address to the module number
@@ -93,24 +121,12 @@ class TraceProcessor:
 
                             if m_num in mod_table:
                                 bblock = "%s+%s" % (mod_table[m_num], m_ins)
-                                trace_data.update([bblock])
+                                processed_trace.add(bblock)
 
-                        ublock_cnt = len(trace_data)
-                        trace_pack = packer.pack(list(trace_data))
+                        self.store_results(seed_name, trace_name, trace_path, processed_trace)
+                    else:
+                        print "[ +E+ ] - Error parsing trace for seed %s.  Discarding!" % seed_name
 
-                        try:
-                            self.c.execute('INSERT INTO seeds VALUES (null,?,?,?)',
-                                           (seed_name, ublock_cnt, sqlite3.Binary(trace_pack), ))
-                            self.sql.commit()
-                        except sqlite3.IntegrityError:
-                            print "[ +E+ ] - Seed already exists in database: %s" % seed_name
-
-                        self.c.execute('BEGIN TRANSACTION')
-                        for bblock in trace_data:
-                            self.c.execute('INSERT OR IGNORE INTO master_lookup VALUES (?)', (bblock, ))
-                        self.sql.commit()
-
-                        print "[ +D+ ] - Processed trace for seed %s covering %s unique blocks" % (seed_name, ublock_cnt)
                     self.job.delete()
                 else:
                     break
