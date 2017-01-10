@@ -2,6 +2,7 @@ import yaml
 import os
 import shutil
 import sqlite3
+import sys
 
 
 class DistillerConfig:
@@ -10,12 +11,13 @@ class DistillerConfig:
 
         try:
             self.project_name = self.config['name']
-            self.trace_queue = "%s-trace-queue" % self.project_name
-            self.trace_results = "%s-trace-results" % self.project_name
-            self.min_queue = "%s-min-queue" % self.project_name
-            self.min_results = "%s-min-results" % self.project_name
         except KeyError:
             raise Exception(" Project name not defined.")
+
+        self.trace_queue = "%s-trace-queue" % self.project_name
+        self.trace_results = "%s-trace-results" % self.project_name
+        self.min_queue = "%s-min-queue" % self.project_name
+        self.min_results = "%s-min-results" % self.project_name
 
         try:
             self.operations = self.config['operations']
@@ -34,69 +36,54 @@ class DistillerConfig:
 
         if section == "server":
             try:
-                self.db_path = self.config['db_path']
+                self.seed_dir = self.config['seed_dir']
             except KeyError:
-                raise Exception("No database path defined.")
+                raise Exception("No working path defined.")
 
-            action = None
-            if os.path.isfile(self.db_path) and ("reduce" in self.operations or "trace" in self.operations):
+            try:
+                self.working_dir = self.config['working_dir']
+            except KeyError:
+                raise Exception("No working path defined.")
+
+            self.project_dir = os.path.join(self.working_dir, self.project_name)
+            self.db_path = os.path.join(self.project_dir, "backup.db")
+            self.min_dir = os.path.join(self.project_dir, "minimized")
+            self.trace_dir = os.path.join(self.project_dir, "traces")
+            self.results_dir = os.path.join(self.project_dir, "results")
+
+            if os.path.isdir(self.project_dir):
+                action = None
                 while action != "R" and action != "A":
-                    action = raw_input("Database Exists! Replace or Append? [R/A]: ").upper()
+                    action = raw_input("Project Exists! Replace or Append? [R/A]: ").upper()
 
                 if action == "R":
                     confirm = None
                     while confirm != "Y" and confirm != "N":
-                        confirm = raw_input("Are you certain?  All trace files will be deleted! [Y/N]: ").upper()
+                        confirm = raw_input("Are you sure?  All data will be deleted! [Y/N]: ").upper()
 
                     if confirm == "Y":
-                        os.remove(self.db_path)
-                        shutil.rmtree(self.config['trace_dir'])
-                        os.makedirs(self.config['trace_dir'])
-
-            sql = sqlite3.connect(self.db_path)
-            c = sql.cursor()
-            c.execute('''CREATE TABLE IF NOT EXISTS modules
-            (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-            c.execute('''CREATE TABLE IF NOT EXISTS seeds
-            (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
-            c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
-            (bblock TEXT PRIMARY KEY)''')
-
-            # Results are calculated using the full data set
-            # Wipe if they exist
-            c.execute('''DROP TABLE IF EXISTS results''')
-            c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
-            sql.commit()
-
-            try:
-                self.seed_dir = self.config['seed_dir']
-            except KeyError:
-                raise Exception("No seed directory defined.")
-
-            try:
-                self.trace_dir = self.config['trace_dir']
-                if not os.path.isdir(self.trace_dir):
-                    try:
-                        os.makedirs(self.trace_dir)
-                    except:
-                        raise Exception("Could not create trace directory!")
-            except KeyError:
-                raise Exception("No trace directory defined.")
-
-            try:
-                if "reduce" in self.operations or "minimize" in self.operations:
-                    self.output_dir = self.config['output_dir']
-                    try:
-                        self.min_dir = os.path.join(self.output_dir, "minimized")
+                        shutil.rmtree(self.project_dir)
+                        os.makedirs(self.project_dir)
                         os.makedirs(self.min_dir)
-                    except os.error:
-                        # Ignore if dir already exists
-                        pass
-                else:
-                    self.output_dir = None
-                    self.min_dir = None
-            except KeyError:
-                raise Exception("No output directory defined.")
+                        os.makedirs(self.trace_dir)
+                        os.makedirs(self.results_dir)
+
+                        sql = sqlite3.connect(self.db_path)
+                        c = sql.cursor()
+                        c.execute('BEGIN TRANSACTION')
+                        c.execute('''CREATE TABLE IF NOT EXISTS modules
+                            (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
+                        c.execute('''CREATE TABLE IF NOT EXISTS seeds
+                            (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
+                        c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
+                            (bblock TEXT PRIMARY KEY)''')
+
+                        # Results are calculated using the full data set - Wipe if they exist!
+                        c.execute('''DROP TABLE IF EXISTS results''')
+                        c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
+                        sql.commit()
+                    else:
+                        sys.exit()
 
         elif section == "client":
             try:

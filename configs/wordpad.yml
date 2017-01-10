@@ -13,10 +13,8 @@ project:
         - C:\DynamoRIO\tools\lib32\release\drcov.dll
         # - C:\Program Files\Windows NT\Accessories\wordpad.exe
 server:
-    db_path: ./backup.db
     seed_dir: ./seeds/
-    trace_dir: ./traces/
-    output_dir: ./results/
+    working_dir: ./projects/
 client:
     host: 192.168.56.1
     drio_path: C:\DynamoRIO\bin32\drrun.exe
