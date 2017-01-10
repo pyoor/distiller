@@ -1,5 +1,6 @@
 import yaml
 import os
+import shutil
 import sqlite3
 
 
@@ -25,7 +26,7 @@ class DistillerConfig:
 
         try:
             self.mode = self.config['filter']['mode']
-            self.modules = self.config['filter']['modules']
+            self.modules = self.config['modules']
         except KeyError:
             # Optional arguments
             self.mode = None
@@ -34,31 +35,38 @@ class DistillerConfig:
         if section == "server":
             try:
                 self.db_path = self.config['db_path']
-
-                action = None
-                if os.path.isfile(self.db_path) and ("reduce" in self.operations or "trace" in self.operations):
-                    while action != "R" and action != "A":
-                        action = raw_input("Database Exists! [R]eplace or [A]ppend? ").upper()
-
-                    if action == "R":
-                        os.remove(self.db_path)
-
-                sql = sqlite3.connect(self.db_path)
-                c = sql.cursor()
-                c.execute('''CREATE TABLE IF NOT EXISTS modules
-                (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-                c.execute('''CREATE TABLE IF NOT EXISTS seeds
-                (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
-                c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
-                (bblock TEXT PRIMARY KEY)''')
-
-                # Results are calculated using the full data set
-                # Wipe if they exist
-                c.execute('''DROP TABLE IF EXISTS results''')
-                c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
-                sql.commit()
             except KeyError:
                 raise Exception("No database path defined.")
+
+            action = None
+            if os.path.isfile(self.db_path) and ("reduce" in self.operations or "trace" in self.operations):
+                while action != "R" and action != "A":
+                    action = raw_input("Database Exists! Replace or Append? [R/A]: ").upper()
+
+                if action == "R":
+                    confirm = None
+                    while confirm != "Y" and confirm != "N":
+                        confirm = raw_input("Are you certain?  All trace files will be deleted! [Y/N]: ").upper()
+
+                    if confirm == "Y":
+                        os.remove(self.db_path)
+                        shutil.rmtree(self.config['trace_dir'])
+                        os.makedirs(self.config['trace_dir'])
+
+            sql = sqlite3.connect(self.db_path)
+            c = sql.cursor()
+            c.execute('''CREATE TABLE IF NOT EXISTS modules
+            (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
+            c.execute('''CREATE TABLE IF NOT EXISTS seeds
+            (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
+            c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
+            (bblock TEXT PRIMARY KEY)''')
+
+            # Results are calculated using the full data set
+            # Wipe if they exist
+            c.execute('''DROP TABLE IF EXISTS results''')
+            c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
+            sql.commit()
 
             try:
                 self.seed_dir = self.config['seed_dir']
@@ -70,8 +78,6 @@ class DistillerConfig:
                 if not os.path.isdir(self.trace_dir):
                     try:
                         os.makedirs(self.trace_dir)
-                    except os.error:
-                        pass
                     except:
                         raise Exception("Could not create trace directory!")
             except KeyError:
