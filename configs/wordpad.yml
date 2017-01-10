@@ -2,17 +2,16 @@ project:
     name: Wordpad
     operations:
         - trace
-        - reduce
+        # - reduce
         # - minimize
     filter:
         mode: exclude
-        modules:
-            - <unknown>
-            - C:\DynamoRIO\lib32\release\dynamorio.dll
-            - C:\DynamoRIO\tools\lib32\release\drcov.dll
-        #mode: include
-        #modules:
-        #    - C:\Program Files\Windows NT\Accessories\wordpad.exe
+        # mode: include
+    modules:
+        - <unknown>
+        - C:\DynamoRIO\lib32\release\dynamorio.dll
+        - C:\DynamoRIO\tools\lib32\release\drcov.dll
+        # - C:\Program Files\Windows NT\Accessories\wordpad.exe
 server:
     db_path: ./backup.db
     seed_dir: ./seeds/
