@@ -43,20 +43,20 @@ class DistillerConfig:
                     if action == "R":
                         os.remove(self.db_path)
 
-                    sql = sqlite3.connect(self.db_path)
-                    c = sql.cursor()
-                    c.execute('''CREATE TABLE IF NOT EXISTS modules
-                        (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
-                    c.execute('''CREATE TABLE IF NOT EXISTS seeds
-                        (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
-                    c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
-                        (bblock TEXT PRIMARY KEY)''')
+                sql = sqlite3.connect(self.db_path)
+                c = sql.cursor()
+                c.execute('''CREATE TABLE IF NOT EXISTS modules
+                (num INTEGER PRIMARY KEY, name TEXT, UNIQUE (name))''')
+                c.execute('''CREATE TABLE IF NOT EXISTS seeds
+                (num INTEGER PRIMARY KEY, seed_name TEXT, trace_name TEXT, ublock_cnt INT, UNIQUE (seed_name))''')
+                c.execute('''CREATE TABLE IF NOT EXISTS master_lookup
+                (bblock TEXT PRIMARY KEY)''')
 
-                    # Results are calculated using the full data set
-                    # Wipe if they exist
-                    c.execute('''DROP TABLE IF EXISTS results''')
-                    c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
-                    sql.commit()
+                # Results are calculated using the full data set
+                # Wipe if they exist
+                c.execute('''DROP TABLE IF EXISTS results''')
+                c.execute('''CREATE TABLE results (name TEXT PRIMARY KEY, ublock_cnt INT)''')
+                sql.commit()
             except KeyError:
                 raise Exception("No database path defined.")
 
