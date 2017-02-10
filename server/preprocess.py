@@ -57,7 +57,7 @@ class TraceProcessor:
         except:
             print "[ +E+ ] - Error updating database.  Discarding!" % trace_name
             if os.path.isfile(trace_path):
-                os.path.remove(trace_path)
+                os.remove(trace_path)
             return
 
         print "[ +D+ ] - Processed trace for seed %s covering %s unique blocks" % (seed_name, ublock_cnt)
